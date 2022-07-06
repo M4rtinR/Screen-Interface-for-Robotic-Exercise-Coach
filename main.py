@@ -73,7 +73,9 @@ class requestHandler(BaseHTTPRequestHandler):
                 print("non-exercise")
                 output += '<html><body>'
                 output += '<div style="height:80%; background:black; position:absolute">'  # Main div
-                output += '<button type="button" style="position:absolute; bottom:0; right:0, width:20%; height:20%; font-size:xx-large;">Repeat</button>'  # Repeat button
+                output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
+                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0;, width:20%; height:20%; font-size:xx-large;" />'
+                output += '</form>'
                 output += '</div>'
                 output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
                 output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
@@ -116,8 +118,10 @@ class requestHandler(BaseHTTPRequestHandler):
                 if picName is not None:
                     data_uri = base64.b64encode(open(picName, 'rb').read()).decode('utf-8')
                     output += '<img src="data:image/png;base64,{0}" alt="Current exercise" style="width:70%; height:100%; object-fit:fill;">'.format(data_uri)  # Exercise image
-                output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;right:0;display:inline-block;padding:7.3% 0">' + repCount + '</div>'  # Rep counter
-                output += '<button type="button" style="position:absolute; bottom:0; right:0;, width:20%; height:20%; font-size:xx-large;">Repeat</button>'  # Repeat button
+                output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;right:0;display:inline-block;padding:7.3%">' + repCount + '</div>'  # Rep counter
+                output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
+                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0;, width:20%; height:20%; font-size:xx-large;" />'
+                output += '</form>'
                 output += '</div>'
                 output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position: absolute; bottom:0;">'  # Subtitle div
                 output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large">' + displayStringSpaces + '</div>'  # Subtitle text
@@ -163,9 +167,6 @@ class requestHandler(BaseHTTPRequestHandler):
             sftp.close()
 
         elif self.path.endswith("/stop"):
-            self.send_response(200)
-            self.send_header('content-type', 'text-html')
-            self.end_headers()
 
             output = '<!DOCTYPE html>'
 
@@ -178,7 +179,7 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '<form action="http://192.168.1.207:8000/stopSession" method="POST">'
             output += '<input type="submit" name="stop_session" value="Stop Session" style="padding:30px; font-size:xx-large; margin-right:10%" />'
             output += '</form>'
-            output += '<form action="http://192.168.1.207:8000/stopExercise" method="POST">'
+            output += '<form action="http://192.168.1.207:8000/stopSet" method="POST">'
             output += '<input type="submit" name="stop_set" value="Stop Set" style="padding:30px; font-size:xx-large; margin-right:10%" />'
             output += '</form>'
             output += '<form action="http://192.168.1.207:8000/cancel" method="POST">'
@@ -196,6 +197,11 @@ class requestHandler(BaseHTTPRequestHandler):
             sftp.put("/var/www/html/RehabInterface/webpages/stop.html",
                      ".local/share/PackageManager/apps/boot-config/html/index.html")
             sftp.close()
+
+
+            self.send_response(200)
+            self.send_header('content-type', 'text-html')
+            self.end_headers()
 
             '''# Send signal to robot to pause the session.
             output = {
@@ -277,9 +283,18 @@ class requestHandler(BaseHTTPRequestHandler):
             }
             r = requests.post(post_address, json=output)
 
+        elif self.path.endswith("/repeat"):
+            print("POST repeat")
+            output = {
+                "repeat": "1"
+            }
+            r = requests.post(post_address, json=output)
+
+        print("Post sending response")
         self.send_response(301)
         self.send_header('content-type', 'text/html')
         if self.path.endswith("/stop"):
+            print("post going to stop screen")
             self.send_header('Location', '/stop')
         else:
             self.send_header('Location', '/display')
