@@ -44,14 +44,20 @@ displayStringSpaces = ''
 picName = None
 phase = EXERCISE
 repCount = '0'
+OVERRIDE_QUESTION = 0
+OVERRIDE_PRE_INSTRUCTION = 1
+overrideQuestionOrPre = OVERRIDE_QUESTION
+OVERRIDE_SHOT = 0
+OVERRIDE_STAT = 1
+overrideShotOrStat = OVERRIDE_STAT
 post_address = "http://192.168.1.207:4999/output"
 controller_post_address = "http://192.168.1.207:5000/cue"
-ssh = paramiko.SSHClient()
+'''ssh = paramiko.SSHClient()
 ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
 # 4G hotspot:
 # ssh.connect("192.168.43.57", username="nao", password="nao")
 # ITT_Pepper router:
-ssh.connect("192.168.1.5", username="nao", password="nao")
+ssh.connect("192.168.1.5", username="nao", password="nao")'''
 
 class requestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -60,6 +66,8 @@ class requestHandler(BaseHTTPRequestHandler):
         global picName
         global phase
         global repCount
+        global overrideQuestionOrPre
+        global overrideShotOrStat
         if self.path.endswith('/display'):
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -133,9 +141,9 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
-            sftp = ssh.open_sftp()
+            '''sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/index.html", ".local/share/PackageManager/apps/boot-config/html/index.html")
-            sftp.close()
+            sftp.close()'''
         elif self.path.endswith("/video"):
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -161,10 +169,10 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
-            sftp = ssh.open_sftp()
+            '''sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/video.html",
                      ".local/share/PackageManager/apps/boot-config/html/video.html")
-            sftp.close()
+            sftp.close()'''
 
         elif self.path.endswith("/stop"):
 
@@ -193,11 +201,10 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
-            sftp = ssh.open_sftp()
+            '''sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/stop.html",
                      ".local/share/PackageManager/apps/boot-config/html/index.html")
-            sftp.close()
-
+            sftp.close()'''
 
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -209,12 +216,298 @@ class requestHandler(BaseHTTPRequestHandler):
             }
             r = requests.post(post_address, json=output)'''
 
+        elif self.path.endswith("/override"):
+            if overrideQuestionOrPre == OVERRIDE_PRE_INSTRUCTION:
+                print("override pre instruction")
+
+                self.send_response(200)
+                self.send_header('content-type', 'text-html')
+                self.end_headers()
+
+                output = '<!DOCTYPE html>'
+
+                output += '<html><head><style>\n'
+                output += '.continueButton {grid-area: leftButton; }\n'
+                output += '.chooseButton {grid-area: rightButton; }\n'
+                output += '.repeatButton {grid-area: bottomButton; }\n'
+                output += '.grid-container {display: grid; grid-template-areas: \'leftButton rightButton\' \'bottomButton bottomButton\'; gap: 10px; padding: 10px; }\n'
+                output += '.grid-container > div {height: 300px; text-align: center; padding: 20px 0; font-size: 30px; }\n'
+                output += '.button {width: 95%; height: 40px; }\n'
+                output += '</style></head><body>'
+                output += '<div class="grid-container">'
+                output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
+                output += '<input type="submit" name="continue" value="Continue" class="button"/>'
+                output += '</form></div>'
+                if overrideShotOrStat == OVERRIDE_SHOT:
+                    output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/shotChoice" method="POST">'
+                    output += '<input type="submit" name="selectShot" value="Select Shot" class="button" />'
+                    output += '</form></div>'
+                else:
+                    output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/statChoice" method="POST">'
+                    output += '<input type="submit" name="selectStat" value="Select Metric" class="button" />'
+                    output += '</form></div>'
+                output += '<div class="repeatButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+                output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
+                output += '</form></div>'
+                output += '</div>'
+                output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
+                output += '</div>'
+                output += '</body></html>'
+
+                self.wfile.write(output.encode())
+                f = open("/var/www/html/RehabInterface/webpages/index.html", "w")
+                f.writelines(output)
+                f.close()
+
+                '''sftp = ssh.open_sftp()
+                sftp.put("/var/www/html/RehabInterface/webpages/index.html",
+                         ".local/share/PackageManager/apps/boot-config/html/index.html")
+                sftp.close()'''
+            else:
+                print("override questioning")
+
+                self.send_response(200)
+                self.send_header('content-type', 'text-html')
+                self.end_headers()
+
+                if overrideShotOrStat == OVERRIDE_SHOT:
+
+                    output = '<!DOCTYPE html>'
+                    output += '<html><head><style>\n'
+                    output += '.leftButton {grid-area: leftButton; }\n'
+                    output += '.middleButton {grid-area: middleButton; }\n'
+                    output += '.rightButton {grid-area: rightButton; }\n'
+                    output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 10px; padding: 10px; }\n'
+                    output += '.grid-container > div {height: 100px; text-align: center; padding: 20px 0; font-size: 30px; }\n'
+                    output += '.button {width: 100%; height: 100%; }\n'
+                    output += '</style></head><body>'
+
+                    output += '<div class="grid-container">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/shotSelection" method="POST">'
+                    output += '<input type="submit" name="drop" value="Straight Drop" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/shotSelection" method="POST">'
+                    output += '<input type="submit" name="drive" value="Straight Drive" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/lob/shotSelection" method="POST">'
+                    output += '<input type="submit" name="lob" value="Cross Court Lob" class="button"/>'
+                    output += '</form></div>'
+                    output += '</div>'
+
+                    output += '<div class="grid-container">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/boast/shotSelection" method="POST">'
+                    output += '<input type="submit" name="boast" value="Two Wall Boast" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/kill/shotSelection" method="POST">'
+                    output += '<input type="submit" name="kill" value="Straight Kill" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volleyKill/shotSelection" method="POST">'
+                    output += '<input type="submit" name="volleyKill" value="Volley Kill" class="button"/>'
+                    output += '</form></div>'
+                    output += '</div>'
+
+                    output += '<div class="grid-container">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volleyDrop/shotSelection" method="POST">'
+                    output += '<input type="submit" name="volleyDrop" value="Volley Drop" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/chooseForMe" method="POST">'
+                    output += '<input type="submit" name="chooseForMe" value="Choose For Me" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+                    output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
+                    output += '</form></div>'
+                    output += '</div>'
+
+                    output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                    output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
+                    output += '</div>'
+                    output += '</body></html>'
+
+                    self.wfile.write(output.encode())
+                    f = open("/var/www/html/RehabInterface/webpages/index.html", "w")
+                    f.writelines(output)
+                    f.close()
+
+                else:
+
+                    output = '<!DOCTYPE html>'
+                    output += '<html><head><style>\n'
+                    output += '.leftButton {grid-area: leftButton; }\n'
+                    output += '.middleButton {grid-area: middleButton; }\n'
+                    output += '.rightButton {grid-area: rightButton; }\n'
+                    output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 10px; padding: 10px; }\n'
+                    output += '.grid-container > div {height: 100px; text-align: center; padding: 20px 0; font-size: 30px; }\n'
+                    output += '.button {width: 100%; height: 100%; }\n'
+                    output += '</style></head><body>'
+
+                    output += '<div class="grid-container">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/prep/statSelection" method="POST">'
+                    output += '<input type="submit" name="prep" value="Racket Preparation" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/downSwing/statSelection" method="POST">'
+                    output += '<input type="submit" name="downSwing" value="Down Swing Speed" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/cutAngle/statSelection" method="POST">'
+                    output += '<input type="submit" name="cutAngle" value="Impact Cut Angle" class="button"/>'
+                    output += '</form></div>'
+                    output += '</div>'
+
+                    output += '<div class="grid-container">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/speed/statSelection" method="POST">'
+                    output += '<input type="submit" name="speed" value="Impact Speed" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughSwing/statSelection" method="POST">'
+                    output += '<input type="submit" name="followThroughSwing" value="Follow Through Swing" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/followThroughTime/statSelection" method="POST">'
+                    output += '<input type="submit" name="followThroughTime" value="Follow Through Time" class="button"/>'
+                    output += '</form></div>'
+                    output += '</div>'
+
+                    output += '<div class="grid-container">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/chooseForMe" method="POST">'
+                    output += '<input type="submit" name="chooseForMe" value="Choose For Me" class="button"/>'
+                    output += '</form></div>'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+                    output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
+                    output += '</form></div>'
+                    output += '</div>'
+
+                    output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                    output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
+                    output += '</div>'
+                    output += '</body></html>'
+
+                    self.wfile.write(output.encode())
+                    f = open("/var/www/html/RehabInterface/webpages/index.html", "w")
+                    f.writelines(output)
+                    f.close()
+
+        elif self.path.endswith("/shotChoice"):
+            print("shotChoice")
+
+            self.send_response(200)
+            self.send_header('content-type', 'text-html')
+            self.end_headers()
+
+            output = '<!DOCTYPE html>'
+            output += '<html><head><style>\n'
+            output += '.leftButton {grid-area: leftButton; }\n'
+            output += '.middleButton {grid-area: middleButton; }\n'
+            output += '.rightButton {grid-area: rightButton; }\n'
+            output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 10px; padding: 10px; }\n'
+            output += '.grid-container > div {height: 100px; text-align: center; padding: 20px 0; font-size: 30px; }\n'
+            output += '.button {width: 100%; height: 100%; }\n'
+            output += '</style></head><body>'
+
+            output += '<div class="grid-container">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/shotSelection" method="POST">'
+            output += '<input type="submit" name="drop" value="Straight Drop" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/shotSelection" method="POST">'
+            output += '<input type="submit" name="drive" value="Straight Drive" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/lob/shotSelection" method="POST">'
+            output += '<input type="submit" name="lob" value="Cross Court Lob" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+
+            output += '<div class="grid-container">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/boast/shotSelection" method="POST">'
+            output += '<input type="submit" name="boast" value="Two Wall Boast" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/kill/shotSelection" method="POST">'
+            output += '<input type="submit" name="kill" value="Straight Kill" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volleyKill/shotSelection" method="POST">'
+            output += '<input type="submit" name="volleyKill" value="Volley Kill" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+
+            output += '<div class="grid-container">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volleyDrop/shotSelection" method="POST">'
+            output += '<input type="submit" name="volleyDrop" value="Volley Drop" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+            output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+
+            output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
+            output += '</div>'
+            output += '</body></html>'
+
+            self.wfile.write(output.encode())
+            f = open("/var/www/html/RehabInterface/webpages/index.html", "w")
+            f.writelines(output)
+            f.close()
+
+        elif self.path.endswith("/statChoice"):
+            print("statChoice")
+
+            self.send_response(200)
+            self.send_header('content-type', 'text-html')
+            self.end_headers()
+
+            output = '<!DOCTYPE html>'
+            output += '<html><head><style>\n'
+            output += '.leftButton {grid-area: leftButton; }\n'
+            output += '.middleButton {grid-area: middleButton; }\n'
+            output += '.rightButton {grid-area: rightButton; }\n'
+            output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 10px; padding: 10px; }\n'
+            output += '.grid-container > div {height: 100px; text-align: center; padding: 20px 0; font-size: 30px; }\n'
+            output += '.button {width: 100%; height: 100%; }\n'
+            output += '</style></head><body>'
+
+            output += '<div class="grid-container">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/prep/statSelection" method="POST">'
+            output += '<input type="submit" name="prep" value="Racket Preparation" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/downSwing/statSelection" method="POST">'
+            output += '<input type="submit" name="downSwing" value="Down Swing Speed" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/cutAngle/statSelection" method="POST">'
+            output += '<input type="submit" name="cutAngle" value="Impact Cut Angle" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+
+            output += '<div class="grid-container">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/speed/statSelection" method="POST">'
+            output += '<input type="submit" name="speed" value="Impact Speed" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughSwing/statSelection" method="POST">'
+            output += '<input type="submit" name="followThroughSwing" value="Follow Through Swing" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/followThroughTime/statSelection" method="POST">'
+            output += '<input type="submit" name="followThroughTime" value="Follow Through Time" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+
+            output += '<div class="grid-container">'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+            output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+
+            output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
+            output += '</div>'
+            output += '</body></html>'
+
+            self.wfile.write(output.encode())
+            f = open("/var/www/html/RehabInterface/webpages/index.html", "w")
+            f.writelines(output)
+            f.close()
 
     def do_POST(self):
         global displayStringSpaces
         global picName
         global phase
         global repCount
+        global overrideQuestionOrPre
+        global overrideShotOrStat
         if self.path.endswith('/newUtterance'):
             print(self.path)
             displayString = self.path.split('/')[1]
@@ -248,7 +541,6 @@ class requestHandler(BaseHTTPRequestHandler):
             r = requests.post(post_address, json=output)
 
         elif self.path.endswith("/stopSession"):
-            # TODO: send message to controller with session goal PHASE_END, unpause and delete paused action.
             print("POST stopSession")
             pepper_output = {
                 "pause": "3",
@@ -257,12 +549,12 @@ class requestHandler(BaseHTTPRequestHandler):
             r = requests.post(post_address, json=pepper_output)
 
             controller_output = {
-                "goal_level": 1
+                "goal_level": 1,
+                "stop": 1
             }
             r = requests.post(controller_post_address, json=controller_output)
 
         elif self.path.endswith("/stopSet"):
-            # TODO: send message to controller with set goal PHASE_END, unpause and delete paused action.
             print("POST stopSet")
             pepper_output = {
                 "pause": "0",
@@ -271,12 +563,12 @@ class requestHandler(BaseHTTPRequestHandler):
             r = requests.post(post_address, json=pepper_output)
 
             controller_output = {
-                "goal_level": 2
+                "goal_level": 2,
+                "stop": 1
             }
             r = requests.post(controller_post_address, json=controller_output)
 
         elif self.path.endswith("/cancel"):
-            # TODO: unpause and execute paused action.
             print("POST stopSession")
             output = {
                 "pause": "0"
@@ -290,12 +582,63 @@ class requestHandler(BaseHTTPRequestHandler):
             }
             r = requests.post(post_address, json=output)
 
+        elif self.path.endswith("/overrideOption"):
+            print("Override option")
+            displayString = self.path.split('/')[1]
+            displayStringSpaces = displayString.replace('%20', ' ')
+
+            questionOrPre = self.path.split('/')[2]
+            if questionOrPre == "question":
+                overrideQuestionOrPre = OVERRIDE_QUESTION
+            else:
+                overrideQuestionOrPre = OVERRIDE_PRE_INSTRUCTION
+
+            shotOrStat = self.path.split('/')[3]
+            if shotOrStat == "shot":
+                overrideShotOrStat = OVERRIDE_SHOT
+            else:
+                overrideShotOrStat = OVERRIDE_STAT
+
+        elif self.path.endswith("/continue"):
+            print("continue (no override)")
+
+            controller_output = {
+                "override": False
+            }
+            r = requests.post(controller_post_address, json=controller_output)
+
+        elif self.path.endswith("/shotChoice") or self.path.endswith("/statChoice") or self.path.endswith("/chooseForMe"):
+            print("override selected by user")
+
+            controller_output = {
+                "override": True
+            }
+            r = requests.post(controller_post_address, json=controller_output)
+
+        elif self.path.endswith("/shotSelection"):
+            print("shot selected")
+            shot = self.path.split('/')[1]
+            controller_output = {
+                "shot_selection": shot
+            }
+            r = requests.post(controller_post_address, json=controller_output)
+
+        elif self.path.endswith("/statSelection"):
+            print("stat selected")
+            stat = self.path.split('/')[1]
+            controller_output = {
+                "stat_selection": stat
+            }
+            r = requests.post(controller_post_address, json=controller_output)
+
         print("Post sending response")
         self.send_response(301)
         self.send_header('content-type', 'text/html')
         if self.path.endswith("/stop"):
             print("post going to stop screen")
             self.send_header('Location', '/stop')
+        elif self.path.endswith("/overrideOption"):
+            self.send_header('Location', '/override')
         else:
             self.send_header('Location', '/display')
         self.end_headers()
