@@ -50,14 +50,23 @@ overrideQuestionOrPre = OVERRIDE_QUESTION
 OVERRIDE_SHOT = 0
 OVERRIDE_STAT = 1
 overrideShotOrStat = OVERRIDE_STAT
+shot = None
+
+# ITT Pepper router:
 post_address = "http://192.168.1.207:4999/output"
 controller_post_address = "http://192.168.1.207:5000/cue"
-'''ssh = paramiko.SSHClient()
+
+# Home wifi:
+# post_address = "http://192.168.1.174:4999/output"
+# controller_post_address = "http://192.168.1.174:5000/cue"
+ssh = paramiko.SSHClient()
 ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
 # 4G hotspot:
 # ssh.connect("192.168.43.57", username="nao", password="nao")
 # ITT_Pepper router:
-ssh.connect("192.168.1.5", username="nao", password="nao")'''
+ssh.connect("192.168.1.5", username="nao", password="nao")
+# Dusty in HRI lab
+# ssh.connect("192.168.1.53", username="nao", password="mummer")
 
 class requestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -118,8 +127,8 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '});\n'
                 output += '</script>'''
                 output += '<div style="height:80%; position:absolute">'  # Main div
-                # output += '<button type="button" style="position:absolute; top:10px; left:40%;">Stop</button>'  # Stop button
-                # output += '<form action="http://192.168.1.207:8000/stop" method="POST"><button type="button" id="stop-btn" name="stop_button" value="stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;">Stop</button></form>'
+                #output += '<button type="button" style="position:absolute; top:10px; left:40%;">Stop</button>'  # Stop button
+                #output += '<form action="http://192.168.1.207:8000/stop" method="POST"><button type="button" id="stop-btn" name="stop_button" value="stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;">Stop</button></form>'
                 output += '<form action="http://192.168.1.207:8000/stop" method="POST">'
                 output += '<input type="submit" name="stop" value="Stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;" />'
                 output += '</form>'
@@ -141,9 +150,9 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
-            '''sftp = ssh.open_sftp()
+            sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/index.html", ".local/share/PackageManager/apps/boot-config/html/index.html")
-            sftp.close()'''
+            sftp.close()
         elif self.path.endswith("/video"):
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -169,10 +178,10 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
-            '''sftp = ssh.open_sftp()
+            sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/video.html",
                      ".local/share/PackageManager/apps/boot-config/html/video.html")
-            sftp.close()'''
+            sftp.close()
 
         elif self.path.endswith("/stop"):
 
@@ -201,10 +210,10 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
-            '''sftp = ssh.open_sftp()
+            sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/stop.html",
                      ".local/share/PackageManager/apps/boot-config/html/index.html")
-            sftp.close()'''
+            sftp.close()
 
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -235,16 +244,19 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '.button {width: 95%; height: 40px; }\n'
                 output += '</style></head><body>'
                 output += '<div class="grid-container">'
-                output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
-                output += '<input type="submit" name="continue" value="Continue" class="button"/>'
-                output += '</form></div>'
                 if overrideShotOrStat == OVERRIDE_SHOT:
                     output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/shotChoice" method="POST">'
                     output += '<input type="submit" name="selectShot" value="Select Shot" class="button" />'
                     output += '</form></div>'
+                    output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
+                    output += '<input type="submit" name="continue" value="Continue with Chosen Shot" class="button"/>'
+                    output += '</form></div>'
                 else:
                     output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/statChoice" method="POST">'
                     output += '<input type="submit" name="selectStat" value="Select Metric" class="button" />'
+                    output += '</form></div>'
+                    output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
+                    output += '<input type="submit" name="continue" value="Continue with Chosen Stat" class="button"/>'
                     output += '</form></div>'
                 output += '<div class="repeatButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
                 output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
@@ -260,10 +272,10 @@ class requestHandler(BaseHTTPRequestHandler):
                 f.writelines(output)
                 f.close()
 
-                '''sftp = ssh.open_sftp()
+                sftp = ssh.open_sftp()
                 sftp.put("/var/www/html/RehabInterface/webpages/index.html",
                          ".local/share/PackageManager/apps/boot-config/html/index.html")
-                sftp.close()'''
+                sftp.close()
             else:
                 print("override questioning")
 
@@ -284,31 +296,31 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '</style></head><body>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/shotSelection" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/handChoice" method="POST">'
                     output += '<input type="submit" name="drop" value="Straight Drop" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/shotSelection" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/handChoice" method="POST">'
                     output += '<input type="submit" name="drive" value="Straight Drive" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/lob/shotSelection" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/cross%20court%20lob/handChoice" method="POST">'
                     output += '<input type="submit" name="lob" value="Cross Court Lob" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/boast/shotSelection" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/two%20wall%20boast/handChoice" method="POST">'
                     output += '<input type="submit" name="boast" value="Two Wall Boast" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/kill/shotSelection" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/straight%20kill/handChoice" method="POST">'
                     output += '<input type="submit" name="kill" value="Straight Kill" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volleyKill/shotSelection" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volley%20kill/handChoice" method="POST">'
                     output += '<input type="submit" name="volleyKill" value="Volley Kill" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volleyDrop/shotSelection" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volley%20drop/handChoice" method="POST">'
                     output += '<input type="submit" name="volleyDrop" value="Volley Drop" class="button"/>'
                     output += '</form></div>'
                     output += '<div class="middleButton"><form action="http://192.168.1.207:8000/chooseForMe" method="POST">'
@@ -329,6 +341,10 @@ class requestHandler(BaseHTTPRequestHandler):
                     f.writelines(output)
                     f.close()
 
+                    sftp = ssh.open_sftp()
+                    sftp.put("/var/www/html/RehabInterface/webpages/index.html",
+                             ".local/share/PackageManager/apps/boot-config/html/index.html")
+                    sftp.close()
                 else:
 
                     output = '<!DOCTYPE html>'
@@ -384,6 +400,10 @@ class requestHandler(BaseHTTPRequestHandler):
                     f.writelines(output)
                     f.close()
 
+                    sftp = ssh.open_sftp()
+                    sftp.put("/var/www/html/RehabInterface/webpages/index.html",
+                             ".local/share/PackageManager/apps/boot-config/html/index.html")
+                    sftp.close()
         elif self.path.endswith("/shotChoice"):
             print("shotChoice")
 
@@ -402,31 +422,31 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '</style></head><body>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/shotSelection" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/handChoice" method="POST">'
             output += '<input type="submit" name="drop" value="Straight Drop" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/shotSelection" method="POST">'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/handChoice" method="POST">'
             output += '<input type="submit" name="drive" value="Straight Drive" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/lob/shotSelection" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/cross%20court%20lob/handChoice" method="POST">'
             output += '<input type="submit" name="lob" value="Cross Court Lob" class="button"/>'
             output += '</form></div>'
             output += '</div>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/boast/shotSelection" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/two%20wall%20boast/handChoice" method="POST">'
             output += '<input type="submit" name="boast" value="Two Wall Boast" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/kill/shotSelection" method="POST">'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/straight%20kill/handChoice" method="POST">'
             output += '<input type="submit" name="kill" value="Straight Kill" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volleyKill/shotSelection" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volley%20kill/handChoice" method="POST">'
             output += '<input type="submit" name="volleyKill" value="Volley Kill" class="button"/>'
             output += '</form></div>'
             output += '</div>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volleyDrop/shotSelection" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volley%20drop/handChoice" method="POST">'
             output += '<input type="submit" name="volleyDrop" value="Volley Drop" class="button"/>'
             output += '</form></div>'
             output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
@@ -444,6 +464,10 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
+            sftp = ssh.open_sftp()
+            sftp.put("/var/www/html/RehabInterface/webpages/index.html",
+                     ".local/share/PackageManager/apps/boot-config/html/index.html")
+            sftp.close()
         elif self.path.endswith("/statChoice"):
             print("statChoice")
 
@@ -501,6 +525,53 @@ class requestHandler(BaseHTTPRequestHandler):
             f.writelines(output)
             f.close()
 
+            sftp = ssh.open_sftp()
+            sftp.put("/var/www/html/RehabInterface/webpages/index.html",
+                     ".local/share/PackageManager/apps/boot-config/html/index.html")
+            sftp.close()
+        elif self.path.endswith('/handChoice'):
+            print("hand choice get")
+
+            self.send_response(200)
+            self.send_header('content-type', 'text-html')
+            self.end_headers()
+
+            output = '<!DOCTYPE html>'
+
+            output += '<html><head><style>\n'
+            output += '.continueButton {grid-area: leftButton; }\n'
+            output += '.chooseButton {grid-area: rightButton; }\n'
+            output += '.repeatButton {grid-area: bottomButton; }\n'
+            output += '.grid-container {display: grid; grid-template-areas: \'leftButton rightButton\' \'bottomButton bottomButton\'; gap: 10px; padding: 10px; }\n'
+            output += '.grid-container > div {height: 300px; text-align: center; padding: 20px 0; font-size: 30px; }\n'
+            output += '.button {width: 95%; height: 40px; }\n'
+            output += '</style></head><body>'
+            output += '<div class="grid-container">'
+            output += '<div class="continueButton"><form action="http://192.168.1.207:8000/FH/' + self.path.split('/')[1] + '/shotSelection" method="POST">'
+            output += '<input type="submit" name="forehand" value="Forehand" class="button"/>'
+            output += '</form></div>'
+            output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/BH/' + self.path.split('/')[1] + '/shotSelection" method="POST">'
+            output += '<input type="submit" name="backhand" value="Backhand" class="button" />'
+            output += '</form></div>'
+            output += '<div class="repeatButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+            output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
+            output += '</form></div>'
+            output += '</div>'
+            output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
+            output += '</div>'
+            output += '</body></html>'
+
+            self.wfile.write(output.encode())
+            f = open("/var/www/html/RehabInterface/webpages/index.html", "w")
+            f.writelines(output)
+            f.close()
+
+            sftp = ssh.open_sftp()
+            sftp.put("/var/www/html/RehabInterface/webpages/index.html",
+                     ".local/share/PackageManager/apps/boot-config/html/index.html")
+            sftp.close()
+
     def do_POST(self):
         global displayStringSpaces
         global picName
@@ -508,6 +579,7 @@ class requestHandler(BaseHTTPRequestHandler):
         global repCount
         global overrideQuestionOrPre
         global overrideShotOrStat
+        global shot
         if self.path.endswith('/newUtterance'):
             print(self.path)
             displayString = self.path.split('/')[1]
@@ -603,7 +675,7 @@ class requestHandler(BaseHTTPRequestHandler):
             print("continue (no override)")
 
             controller_output = {
-                "override": False
+                "override": "False"
             }
             r = requests.post(controller_post_address, json=controller_output)
 
@@ -611,15 +683,17 @@ class requestHandler(BaseHTTPRequestHandler):
             print("override selected by user")
 
             controller_output = {
-                "override": True
+                "override": "True"
             }
             r = requests.post(controller_post_address, json=controller_output)
 
         elif self.path.endswith("/shotSelection"):
             print("shot selected")
-            shot = self.path.split('/')[1]
+            hand = self.path.split('/')[1]
+            localShot = shot
             controller_output = {
-                "shot_selection": shot
+                "hand": hand,
+                "shot_selection": localShot
             }
             r = requests.post(controller_post_address, json=controller_output)
 
@@ -631,6 +705,10 @@ class requestHandler(BaseHTTPRequestHandler):
             }
             r = requests.post(controller_post_address, json=controller_output)
 
+        elif self.path.endswith("/handChoice"):
+            print("hand choice post")
+            shot = self.path.split('/')[1]
+
         print("Post sending response")
         self.send_response(301)
         self.send_header('content-type', 'text/html')
@@ -639,6 +717,8 @@ class requestHandler(BaseHTTPRequestHandler):
             self.send_header('Location', '/stop')
         elif self.path.endswith("/overrideOption"):
             self.send_header('Location', '/override')
+        elif self.path.endswith("/handChoice"):
+            self.send_header('Location', '/handChoice')
         else:
             self.send_header('Location', '/display')
         self.end_headers()
