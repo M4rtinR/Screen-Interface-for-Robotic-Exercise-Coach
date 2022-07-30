@@ -135,7 +135,7 @@ class requestHandler(BaseHTTPRequestHandler):
                 if picName is not None:
                     data_uri = base64.b64encode(open(picName, 'rb').read()).decode('utf-8')
                     output += '<img src="data:image/png;base64,{0}" alt="Current exercise" style="width:70%; height:100%; object-fit:fill;">'.format(data_uri)  # Exercise image
-                output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;right:0;display:inline-block;padding:7.3%">' + repCount + '</div>'  # Rep counter
+                output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;right:0;padding:7.3%">' + repCount + '</div>'  # Rep counter
                 output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
                 output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0;, width:20%; height:20%; font-size:xx-large;" />'
                 output += '</form>'
@@ -256,7 +256,7 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '<input type="submit" name="selectStat" value="Select Metric" class="button" />'
                     output += '</form></div>'
                     output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
-                    output += '<input type="submit" name="continue" value="Continue with Chosen Stat" class="button"/>'
+                    output += '<input type="submit" name="continue" value="Continue with Chosen Metric" class="button"/>'
                     output += '</form></div>'
                 output += '<div class="repeatButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
                 output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
@@ -361,8 +361,8 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '<div class="leftButton"><form action="http://192.168.1.207:8000/racketPreparation/statSelection" method="POST">'
                     output += '<input type="submit" name="prep" value="Racket Preparation" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/downSwingSpeed/statSelection" method="POST">'
-                    output += '<input type="submit" name="downSwing" value="Down Swing Speed" class="button"/>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/approachTiming/statSelection" method="POST">'
+                    output += '<input type="submit" name="downSwing" value="Approach Timing" class="button"/>'
                     output += '</form></div>'
                     output += '<div class="rightButton"><form action="http://192.168.1.207:8000/impactCutAngle/statSelection" method="POST">'
                     output += '<input type="submit" name="cutAngle" value="Impact Cut Angle" class="button"/>'
@@ -373,8 +373,8 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '<div class="leftButton"><form action="http://192.168.1.207:8000/impactSpeed/statSelection" method="POST">'
                     output += '<input type="submit" name="speed" value="Impact Speed" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughSwing/statSelection" method="POST">'
-                    output += '<input type="submit" name="followThroughSwing" value="Follow Through Swing" class="button"/>'
+                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughRoll/statSelection" method="POST">'
+                    output += '<input type="submit" name="followThroughSwing" value="Follow Through Roll" class="button"/>'
                     output += '</form></div>'
                     output += '<div class="rightButton"><form action="http://192.168.1.207:8000/followThroughTime/statSelection" method="POST">'
                     output += '<input type="submit" name="followThroughTime" value="Follow Through Time" class="button"/>'
@@ -489,8 +489,8 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '<div class="leftButton"><form action="http://192.168.1.207:8000/racketPreparation/statSelection" method="POST">'
             output += '<input type="submit" name="prep" value="Racket Preparation" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/downSwingSpeed/statSelection" method="POST">'
-            output += '<input type="submit" name="downSwing" value="Down Swing Speed" class="button"/>'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/approachTiming/statSelection" method="POST">'
+            output += '<input type="submit" name="downSwing" value="Approach Timing" class="button"/>'
             output += '</form></div>'
             output += '<div class="rightButton"><form action="http://192.168.1.207:8000/impactCutAngle/statSelection" method="POST">'
             output += '<input type="submit" name="cutAngle" value="Impact Cut Angle" class="button"/>'
@@ -501,8 +501,8 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '<div class="leftButton"><form action="http://192.168.1.207:8000/impactSpeed/statSelection" method="POST">'
             output += '<input type="submit" name="speed" value="Impact Speed" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughSwing/statSelection" method="POST">'
-            output += '<input type="submit" name="followThroughSwing" value="Follow Through Swing" class="button"/>'
+            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughRoll/statSelection" method="POST">'
+            output += '<input type="submit" name="followThroughSwing" value="Follow Through Roll" class="button"/>'
             output += '</form></div>'
             output += '<div class="rightButton"><form action="http://192.168.1.207:8000/followThroughTime/statSelection" method="POST">'
             output += '<input type="submit" name="followThroughTime" value="Follow Through Time" class="button"/>'
@@ -587,6 +587,8 @@ class requestHandler(BaseHTTPRequestHandler):
             # ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
             # if ctype == 'application/json':
             displayStringSpaces = displayString.replace('%20', ' ')
+            displayStringSpaces = displayStringSpaces.replace('%2520', ' ')
+            displayStringSpaces = displayStringSpaces.replace('%25', '%')
             phase = phaseString == "exercise"
             # else:
             #     print("Didn't work")
@@ -594,7 +596,8 @@ class requestHandler(BaseHTTPRequestHandler):
         elif self.path.endswith('/newPicture'):
             # ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
             # if ctype == 'application/json':
-            picName = "ExercisePhotos/" + self.path.split('/')[1] + "Series.png"
+            picNameUnformatted = "ShotPhotos/" + self.path.split('/')[1] + ".jpg"
+            picName = picNameUnformatted.replace('%20', ' ')
             print("new picture: " + picName)
                 #picName = picName + ".png"
             # else:
