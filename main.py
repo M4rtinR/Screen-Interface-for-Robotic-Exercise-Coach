@@ -51,6 +51,7 @@ OVERRIDE_SHOT = 0
 OVERRIDE_STAT = 1
 overrideShotOrStat = OVERRIDE_STAT
 shot = None
+stopCount = 0
 
 # ITT Pepper router:
 post_address = "http://192.168.1.207:4999/output"
@@ -89,12 +90,13 @@ class requestHandler(BaseHTTPRequestHandler):
             if phase == NON_EXERCISE:
                 print("non-exercise")
                 output += '<html><body>'
-                output += '<div style="height:80%; background:black; position:absolute">'  # Main div
+                output += '<div style="height:80%; width:100%; position:absolute; bottom:20%;">'
+                # output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;right:0;display:inline-block;padding:7.3%">' + repCount + '</div>'  # Rep counter
                 output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
-                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0;, width:20%; height:20%; font-size:xx-large;" />'
+                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0; width:20%; height:20%; font-size:xx-large;" />'
                 output += '</form>'
                 output += '</div>'
-                output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
                 output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
                 output += '</div>'
                 output += '</body></html>'
@@ -126,7 +128,7 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '  }\n'
                 output += '});\n'
                 output += '</script>'''
-                output += '<div style="height:80%; position:absolute">'  # Main div
+                output += '<div style="height:80%; position:absolute;">'  # Main div
                 #output += '<button type="button" style="position:absolute; top:10px; left:40%;">Stop</button>'  # Stop button
                 #output += '<form action="http://192.168.1.207:8000/stop" method="POST"><button type="button" id="stop-btn" name="stop_button" value="stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;">Stop</button></form>'
                 output += '<form action="http://192.168.1.207:8000/stop" method="POST">'
@@ -134,13 +136,13 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '</form>'
                 if picName is not None:
                     data_uri = base64.b64encode(open(picName, 'rb').read()).decode('utf-8')
-                    output += '<img src="data:image/png;base64,{0}" alt="Current exercise" style="width:70%; height:100%; object-fit:fill;">'.format(data_uri)  # Exercise image
-                output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;right:0;display:inline-block;padding:7.3%">' + repCount + '</div>'  # Rep counter
+                    output += '<img src="data:image/png;base64,{0}" alt="Current exercise" style="width:70%; height:100%; object-fit:scale-down;">'.format(data_uri)  # Exercise image
+                output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;bottom:0;right:0;text-align:right;display:inline-block;padding:7.3%">' + repCount + '</div>'  # Rep counter
                 output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
-                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0;, width:20%; height:20%; font-size:xx-large;" />'
+                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0; width:20%; height:20%; font-size:xx-large;" />'
                 output += '</form>'
                 output += '</div>'
-                output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position: absolute; bottom:0;">'  # Subtitle div
+                output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position: absolute; bottom:0;">'  # Subtitle div
                 output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large">' + displayStringSpaces + '</div>'  # Subtitle text
                 output += '</div>'
                 output += '</body></html>'
@@ -190,9 +192,9 @@ class requestHandler(BaseHTTPRequestHandler):
             print("stop screen")
             output += '<html><body>'
             output += '<div style="height:40%; width:100%; display: flex; justify-content: center; align-items: center; position:absolute; top:0;">'  # Main div
-            output += '<div style="flex: 0 0 90%; text-align: center; font-size: xxx-large">Would you like to stop the whole session or just this exercise set?</div>'  # Repeat button
+            output += '<div style="flex: 0 0 90%; text-align: center; font-size: xx-large">Would you like to stop the whole session or just this exercise set?</div>'  # Repeat button
             output += '</div>'
-            output += '<div style="height:60%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="height:60%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
             output += '<form action="http://192.168.1.207:8000/stopSession" method="POST">'
             output += '<input type="submit" name="stop_session" value="Stop Session" style="padding:30px; font-size:xx-large; margin-right:10%" />'
             output += '</form>'
@@ -262,7 +264,7 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
                 output += '</form></div>'
                 output += '</div>'
-                output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
                 output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
                 output += '</div>'
                 output += '</body></html>'
@@ -331,7 +333,7 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '</form></div>'
                     output += '</div>'
 
-                    output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                    output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
                     output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
                     output += '</div>'
                     output += '</body></html>'
@@ -390,7 +392,7 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '</form></div>'
                     output += '</div>'
 
-                    output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+                    output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
                     output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
                     output += '</div>'
                     output += '</body></html>'
@@ -454,7 +456,7 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '</form></div>'
             output += '</div>'
 
-            output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
             output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
             output += '</div>'
             output += '</body></html>'
@@ -515,7 +517,7 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '</form></div>'
             output += '</div>'
 
-            output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
             output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
             output += '</div>'
             output += '</body></html>'
@@ -557,7 +559,7 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
             output += '</form></div>'
             output += '</div>'
-            output += '<div style="height:20%; width:100%; background:grey; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
+            output += '<div style="height:20%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
             output += '<div style="flex: 0 0 90%; text-align: center; font-size: x-large;">' + displayStringSpaces + '</div>'
             output += '</div>'
             output += '</body></html>'
@@ -580,6 +582,7 @@ class requestHandler(BaseHTTPRequestHandler):
         global overrideQuestionOrPre
         global overrideShotOrStat
         global shot
+        global stopCount
         if self.path.endswith('/newUtterance'):
             print(self.path)
             displayString = self.path.split('/')[1]
@@ -615,7 +618,7 @@ class requestHandler(BaseHTTPRequestHandler):
         elif self.path.endswith("/stopSession"):
             print("POST stopSession")
             pepper_output = {
-                "pause": "3",
+                "pause": "0",
                 "stop": "1"
             }
             r = requests.post(post_address, json=pepper_output)
@@ -641,7 +644,7 @@ class requestHandler(BaseHTTPRequestHandler):
             r = requests.post(controller_post_address, json=controller_output)
 
         elif self.path.endswith("/cancel"):
-            print("POST stopSession")
+            print("POST cancel")
             output = {
                 "pause": "0"
             }
