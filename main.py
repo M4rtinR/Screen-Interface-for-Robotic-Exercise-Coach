@@ -618,7 +618,7 @@ class requestHandler(BaseHTTPRequestHandler):
         elif self.path.endswith("/stopSession"):
             print("POST stopSession")
             pepper_output = {
-                "pause": "3",
+                "pause": "0",
                 "stop": "1"
             }
             r = requests.post(post_address, json=pepper_output)
