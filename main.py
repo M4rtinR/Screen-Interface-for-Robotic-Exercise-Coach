@@ -219,11 +219,12 @@ class requestHandler(BaseHTTPRequestHandler):
             self.send_header('content-type', 'text-html')
             self.end_headers()
 
-            '''# Send signal to robot to pause the session.
+            # Send signal to robot to pause the session.
             output = {
-                "pause": "1"
+                'pause': '1'
             }
-            r = requests.post(post_address, json=output)'''
+            print("sending pause signal to robot")
+            r = requests.post(post_address, json=output)
 
         elif self.path.endswith("/override"):
             if overrideQuestionOrPre == OVERRIDE_PRE_INSTRUCTION:
@@ -291,7 +292,7 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '.middleButton {grid-area: middleButton; }\n'
                     output += '.rightButton {grid-area: rightButton; }\n'
                     output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 5px; padding: 5px; }\n'
-                    output += '.grid-container > div {height: 50px; text-align: center; padding: 10px 0; font-size: 30px; }\n'
+                    output += '.grid-container > div {height: 40px; text-align: center; padding: 5px; font-size: 30px; }\n'
                     output += '.button {width: 100%; height: 100%; }\n'
                     output += '</style></head><body>'
 
@@ -353,7 +354,7 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '.middleButton {grid-area: middleButton; }\n'
                     output += '.rightButton {grid-area: rightButton; }\n'
                     output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 5px; padding: 5px; }\n'
-                    output += '.grid-container > div {height: 50px; text-align: center; padding: 10px 0; font-size: 30px; }\n'
+                    output += '.grid-container > div {height: 40px; text-align: center; padding: 5px; font-size: 30px; }\n'
                     output += '.button {width: 100%; height: 100%; }\n'
                     output += '</style></head><body>'
 
@@ -417,7 +418,7 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '.middleButton {grid-area: middleButton; }\n'
             output += '.rightButton {grid-area: rightButton; }\n'
             output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 5px; padding: 5px; }\n'
-            output += '.grid-container > div {height: 50px; text-align: center; padding: 10px 0; font-size: 30px; }\n'
+            output += '.grid-container > div {height: 40px; text-align: center; padding: 5px; font-size: 30px; }\n'
             output += '.button {width: 100%; height: 100%; }\n'
             output += '</style></head><body>'
 
@@ -481,7 +482,7 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '.middleButton {grid-area: middleButton; }\n'
             output += '.rightButton {grid-area: rightButton; }\n'
             output += '.grid-container {display: grid; grid-template-areas: \'leftButton middleButton rightButton\'; gap: 5px; padding: 5px; }\n'
-            output += '.grid-container > div {height: 50px; text-align: center; padding: 10px 0; font-size: 30px; }\n'
+            output += '.grid-container > div {height: 40px; text-align: center; padding: 5px; font-size: 30px; }\n'
             output += '.button {width: 100%; height: 100%; }\n'
             output += '</style></head><body>'
 
@@ -609,11 +610,6 @@ class requestHandler(BaseHTTPRequestHandler):
 
         elif self.path.endswith("/stop"):
             print("POST stop")
-            # Send signal to robot to pause the session.
-            output = {
-                "pause": "1"
-            }
-            r = requests.post(post_address, json=output)
 
         elif self.path.endswith("/stopSession"):
             print("POST stopSession")
