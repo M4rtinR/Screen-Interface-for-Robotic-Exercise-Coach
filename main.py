@@ -51,22 +51,30 @@ OVERRIDE_SHOT = 0
 OVERRIDE_STAT = 1
 overrideShotOrStat = OVERRIDE_STAT
 shot = None
+end = False
+previous_page = None
+baselineSet = False
 
 # ITT Pepper router:
-post_address = "http://192.168.1.207:4999/output"
-controller_post_address = "http://192.168.1.207:5000/cue"
+# post_address = "http://192.168.1.115:4999/output"
+# controller_post_address = "http://192.168.1.115:5000/cue"
+
+# Dusty on HRI lab 5G:
+post_address = "http://192.168.1.115:4999/output"
+controller_post_address = "http://192.168.1.115:5000/cue"
 
 # Home wifi:
 # post_address = "http://192.168.1.174:4999/output"
 # controller_post_address = "http://192.168.1.174:5000/cue"
 ssh = paramiko.SSHClient()
-ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+# ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
 # 4G hotspot:
 # ssh.connect("192.168.43.57", username="nao", password="nao")
 # ITT_Pepper router:
-ssh.connect("192.168.1.5", username="nao", password="nao")
+# ssh.connect("192.168.1.5", username="nao", password="nao")
 # Dusty in HRI lab
-# ssh.connect("192.168.1.53", username="nao", password="mummer")
+ssh.connect("192.168.1.105", username="nao", password="mummer")
 
 class requestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -77,6 +85,8 @@ class requestHandler(BaseHTTPRequestHandler):
         global repCount
         global overrideQuestionOrPre
         global overrideShotOrStat
+        global end
+        global previous_page
         if self.path.endswith('/display'):
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -90,7 +100,14 @@ class requestHandler(BaseHTTPRequestHandler):
                 print("non-exercise")
                 output += '<html><body>'
                 output += '<div style="height:80%; width:100%; position:absolute; bottom:20%;">'
-                output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
+                if end:
+                    output += '<form action="http://192.168.1.115:8000/ok" method="POST">'
+                    output += '<input type="submit" name="ok" value="OK" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;" />'
+                    output += '</form>'
+                output += '<form action="http://192.168.1.115:8000/repeat" method="POST">'
+                output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0; width:20%; height:20%; font-size:xx-large;" />'
+                output += '</form>'
+                output += '<form action="http://192.168.1.115:8000/repeat" method="POST">'
                 output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0; width:20%; height:20%; font-size:xx-large;" />'
                 output += '</form>'
                 output += '</div>'
@@ -111,10 +128,10 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '    if (xmlHttp.readyState == 4 & & xmlHttp.status == 200)\n'
                 output += '      console.log(xmlHttp.responseText);\n'
                 output += '  }\n'
-                output += '  xmlHttp.open("POST", "http://192.168.1.207:8000/stop", true); // true for asynchronous\n'
+                output += '  xmlHttp.open("POST", "http://192.168.1.115:8000/stop", true); // true for asynchronous\n'
                 output += '  xmlHttp.send(null);\n'
                 output += '  try {\n'
-                output += '    const response = await fetch("http://192.168.1.207:8000/stop", {\n'
+                output += '    const response = await fetch("http://192.168.1.115:8000/stop", {\n'
                 output += '      method: "get",\n'
                 output += '      body: {\n'
                 output += '        // Your body\n'
@@ -128,15 +145,16 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '</script>'''
                 output += '<div style="height:80%; position:absolute;">'  # Main div
                 #output += '<button type="button" style="position:absolute; top:10px; left:40%;">Stop</button>'  # Stop button
-                #output += '<form action="http://192.168.1.207:8000/stop" method="POST"><button type="button" id="stop-btn" name="stop_button" value="stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;">Stop</button></form>'
-                output += '<form action="http://192.168.1.207:8000/stop" method="POST">'
-                output += '<input type="submit" name="stop" value="Stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;" />'
-                output += '</form>'
+                #output += '<form action="  http://192.168.1.115:8000/stop" method="POST"><button type="button" id="stop-btn" name="stop_button" value="stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;">Stop</button></form>'
+                if int(repCount) > 0:
+                    output += '<form action="http://192.168.1.115:8000/stop" method="POST">'
+                    output += '<input type="submit" name="stop" value="Stop" style="position:absolute; top:0px; left:40%;, width:20%; height:20%; font-size:xx-large;" />'
+                    output += '</form>'
                 if picName is not None:
                     data_uri = base64.b64encode(open(picName, 'rb').read()).decode('utf-8')
                     output += '<img src="data:image/png;base64,{0}" alt="Current exercise" style="width:70%; height:100%; object-fit:scale-down;">'.format(data_uri)  # Exercise image
                 output += '<div style="text-align:center;font-size:2000%;line-height:100%;width:30%;position:absolute;bottom:0;right:0;text-align:right;display:inline-block;padding:7.3%">' + repCount + '</div>'  # Rep counter
-                output += '<form action="http://192.168.1.207:8000/repeat" method="POST">'
+                output += '<form action="http://192.168.1.115:8000/repeat" method="POST">'
                 output += '<input type="submit" name="repeat" value="Repeat" style="position:absolute; bottom:0; right:0; width:20%; height:20%; font-size:xx-large;" />'
                 output += '</form>'
                 output += '</div>'
@@ -153,6 +171,7 @@ class requestHandler(BaseHTTPRequestHandler):
             sftp = ssh.open_sftp()
             sftp.put("/var/www/html/RehabInterface/webpages/index.html", ".local/share/PackageManager/apps/boot-config/html/index.html")
             sftp.close()
+            end = False
         elif self.path.endswith("/video"):
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -184,6 +203,7 @@ class requestHandler(BaseHTTPRequestHandler):
             sftp.close()
 
         elif self.path.endswith("/stop"):
+            previous_page = "/stop"
 
             output = '<!DOCTYPE html>'
 
@@ -193,13 +213,13 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '<div style="flex: 0 0 90%; text-align: center; font-size: xx-large">Would you like to stop the whole session or just this exercise set?</div>'  # Repeat button
             output += '</div>'
             output += '<div style="height:60%; width:100%; background:lightgray; display: flex; justify-content: center; align-items: center; position:absolute; bottom:0;">'  # Subtitle div
-            output += '<form action="http://192.168.1.207:8000/stopSession" method="POST">'
+            output += '<form action="http://192.168.1.115:8000/stopSession" method="POST">'
             output += '<input type="submit" name="stop_session" value="Stop Session" style="padding:30px; font-size:xx-large; margin-right:10%" />'
             output += '</form>'
-            output += '<form action="http://192.168.1.207:8000/stopSet" method="POST">'
+            output += '<form action="http://192.168.1.115:8000/stopSet" method="POST">'
             output += '<input type="submit" name="stop_set" value="Stop Set" style="padding:30px; font-size:xx-large; margin-right:10%" />'
             output += '</form>'
-            output += '<form action="http://192.168.1.207:8000/cancel" method="POST">'
+            output += '<form action="http://192.168.1.115:8000/cancel" method="POST">'
             output += '<input type="submit" name="cancel" value="Cancel" style="padding:30px; font-size:xx-large;" />'
             output += '</form>'
             output += '</div>'
@@ -227,6 +247,7 @@ class requestHandler(BaseHTTPRequestHandler):
             r = requests.post(post_address, json=output)
 
         elif self.path.endswith("/override"):
+            previous_page = "/override"
             if overrideQuestionOrPre == OVERRIDE_PRE_INSTRUCTION:
                 print("override pre instruction")
 
@@ -246,20 +267,20 @@ class requestHandler(BaseHTTPRequestHandler):
                 output += '</style></head><body>'
                 output += '<div class="grid-container">'
                 if overrideShotOrStat == OVERRIDE_SHOT:
-                    output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/shotChoice" method="POST">'
+                    output += '<div class="chooseButton"><form action="http://192.168.1.115:8000/shotChoice" method="POST">'
                     output += '<input type="submit" name="selectShot" value="Select Shot" class="button" />'
                     output += '</form></div>'
-                    output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
+                    output += '<div class="continueButton"><form action="http://192.168.1.115:8000/continue" method="POST">'
                     output += '<input type="submit" name="continue" value="Continue with Chosen Shot" class="button"/>'
                     output += '</form></div>'
                 else:
-                    output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/statChoice" method="POST">'
+                    output += '<div class="chooseButton"><form action="http://192.168.1.115:8000/statChoice" method="POST">'
                     output += '<input type="submit" name="selectStat" value="Select Metric" class="button" />'
                     output += '</form></div>'
-                    output += '<div class="continueButton"><form action="http://192.168.1.207:8000/continue" method="POST">'
+                    output += '<div class="continueButton"><form action="http://192.168.1.115:8000/continue" method="POST">'
                     output += '<input type="submit" name="continue" value="Continue with Chosen Metric" class="button"/>'
                     output += '</form></div>'
-                output += '<div class="repeatButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+                output += '<div class="repeatButton"><form action="http://192.168.1.115:8000/repeat" method="POST">'
                 output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
                 output += '</form></div>'
                 output += '</div>'
@@ -297,37 +318,37 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '</style></head><body>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/handChoice" method="POST">'
-                    output += '<input type="submit" name="drop" value="Straight Drop" class="button"/>'
+                    output += '<div class="leftButton"><form action="http://192.168.1.115:8000/drop/handChoice" method="POST">'
+                    output += '<input name="drop" type="submit" value="Straight Drop" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/handChoice" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.115:8000/drive/handChoice" method="POST">'
                     output += '<input type="submit" name="drive" value="Straight Drive" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/cross%20court%20lob/handChoice" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.115:8000/cross%20court%20lob/handChoice" method="POST">'
                     output += '<input type="submit" name="lob" value="Cross Court Lob" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/two%20wall%20boast/handChoice" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.115:8000/two%20wall%20boast/handChoice" method="POST">'
                     output += '<input type="submit" name="boast" value="Two Wall Boast" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/straight%20kill/handChoice" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.115:8000/straight%20kill/handChoice" method="POST">'
                     output += '<input type="submit" name="kill" value="Straight Kill" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volley%20kill/handChoice" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.115:8000/volley%20kill/handChoice" method="POST">'
                     output += '<input type="submit" name="volleyKill" value="Volley Kill" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volley%20drop/handChoice" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.115:8000/volley%20drop/handChoice" method="POST">'
                     output += '<input type="submit" name="volleyDrop" value="Volley Drop" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/chooseForMe" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.115:8000/chooseForMe" method="POST">'
                     output += '<input type="submit" name="chooseForMe" value="Choose For Me" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.115:8000/repeat" method="POST">'
                     output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
@@ -359,34 +380,34 @@ class requestHandler(BaseHTTPRequestHandler):
                     output += '</style></head><body>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/racketPreparation/statSelection" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.115:8000/racketPreparation/statSelection" method="POST">'
                     output += '<input type="submit" name="prep" value="Racket Preparation" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/approachTiming/statSelection" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.115:8000/approachTiming/statSelection" method="POST">'
                     output += '<input type="submit" name="downSwing" value="Approach Timing" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/impactCutAngle/statSelection" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.115:8000/impactCutAngle/statSelection" method="POST">'
                     output += '<input type="submit" name="cutAngle" value="Impact Cut Angle" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/impactSpeed/statSelection" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.115:8000/impactSpeed/statSelection" method="POST">'
                     output += '<input type="submit" name="speed" value="Impact Speed" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughRoll/statSelection" method="POST">'
+                    output += '<div class="middleButton"><form action="http://192.168.1.115:8000/followThroughRoll/statSelection" method="POST">'
                     output += '<input type="submit" name="followThroughSwing" value="Follow Through Roll" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/followThroughTime/statSelection" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.115:8000/followThroughTime/statSelection" method="POST">'
                     output += '<input type="submit" name="followThroughTime" value="Follow Through Time" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
 
                     output += '<div class="grid-container">'
-                    output += '<div class="leftButton"><form action="http://192.168.1.207:8000/chooseForMe" method="POST">'
+                    output += '<div class="leftButton"><form action="http://192.168.1.115:8000/chooseForMe" method="POST">'
                     output += '<input type="submit" name="chooseForMe" value="Choose For Me" class="button"/>'
                     output += '</form></div>'
-                    output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+                    output += '<div class="rightButton"><form action="http://192.168.1.115:8000/repeat" method="POST">'
                     output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
                     output += '</form></div>'
                     output += '</div>'
@@ -407,6 +428,7 @@ class requestHandler(BaseHTTPRequestHandler):
                     sftp.close()
         elif self.path.endswith("/shotChoice"):
             print("shotChoice")
+            previous_page = "/shotChoice"
 
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -423,34 +445,34 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '</style></head><body>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/drop/handChoice" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.115:8000/drop/handChoice" method="POST">'
             output += '<input type="submit" name="drop" value="Straight Drop" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/drive/handChoice" method="POST">'
+            output += '<div class="middleButton"><form action="http://192.168.1.115:8000/drive/handChoice" method="POST">'
             output += '<input type="submit" name="drive" value="Straight Drive" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/cross%20court%20lob/handChoice" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.115:8000/cross%20court%20lob/handChoice" method="POST">'
             output += '<input type="submit" name="lob" value="Cross Court Lob" class="button"/>'
             output += '</form></div>'
             output += '</div>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/two%20wall%20boast/handChoice" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.115:8000/two%20wall%20boast/handChoice" method="POST">'
             output += '<input type="submit" name="boast" value="Two Wall Boast" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/straight%20kill/handChoice" method="POST">'
+            output += '<div class="middleButton"><form action="http://192.168.1.115:8000/straight%20kill/handChoice" method="POST">'
             output += '<input type="submit" name="kill" value="Straight Kill" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/volley%20kill/handChoice" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.115:8000/volley%20kill/handChoice" method="POST">'
             output += '<input type="submit" name="volleyKill" value="Volley Kill" class="button"/>'
             output += '</form></div>'
             output += '</div>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/volley%20drop/handChoice" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.115:8000/volley%20drop/handChoice" method="POST">'
             output += '<input type="submit" name="volleyDrop" value="Volley Drop" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.115:8000/repeat" method="POST">'
             output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
             output += '</form></div>'
             output += '</div>'
@@ -471,6 +493,7 @@ class requestHandler(BaseHTTPRequestHandler):
             sftp.close()
         elif self.path.endswith("/statChoice"):
             print("statChoice")
+            previous_page = "/statChoice"
 
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -487,31 +510,31 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '</style></head><body>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/racketPreparation/statSelection" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.115:8000/racketPreparation/statSelection" method="POST">'
             output += '<input type="submit" name="prep" value="Racket Preparation" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/approachTiming/statSelection" method="POST">'
+            output += '<div class="middleButton"><form action="http://192.168.1.115:8000/approachTiming/statSelection" method="POST">'
             output += '<input type="submit" name="downSwing" value="Approach Timing" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/impactCutAngle/statSelection" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.115:8000/impactCutAngle/statSelection" method="POST">'
             output += '<input type="submit" name="cutAngle" value="Impact Cut Angle" class="button"/>'
             output += '</form></div>'
             output += '</div>'
 
             output += '<div class="grid-container">'
-            output += '<div class="leftButton"><form action="http://192.168.1.207:8000/impactSpeed/statSelection" method="POST">'
+            output += '<div class="leftButton"><form action="http://192.168.1.115:8000/impactSpeed/statSelection" method="POST">'
             output += '<input type="submit" name="speed" value="Impact Speed" class="button"/>'
             output += '</form></div>'
-            output += '<div class="middleButton"><form action="http://192.168.1.207:8000/followThroughRoll/statSelection" method="POST">'
+            output += '<div class="middleButton"><form action="http://192.168.1.115:8000/followThroughRoll/statSelection" method="POST">'
             output += '<input type="submit" name="followThroughSwing" value="Follow Through Roll" class="button"/>'
             output += '</form></div>'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/followThroughTime/statSelection" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.115:8000/followThroughTime/statSelection" method="POST">'
             output += '<input type="submit" name="followThroughTime" value="Follow Through Time" class="button"/>'
             output += '</form></div>'
             output += '</div>'
 
             output += '<div class="grid-container">'
-            output += '<div class="rightButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+            output += '<div class="rightButton"><form action="http://192.168.1.115:8000/repeat" method="POST">'
             output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
             output += '</form></div>'
             output += '</div>'
@@ -532,6 +555,7 @@ class requestHandler(BaseHTTPRequestHandler):
             sftp.close()
         elif self.path.endswith('/handChoice'):
             print("hand choice get")
+            previous_page = "/handChoice"
 
             self.send_response(200)
             self.send_header('content-type', 'text-html')
@@ -548,13 +572,13 @@ class requestHandler(BaseHTTPRequestHandler):
             output += '.button {width: 95%; height: 40px; }\n'
             output += '</style></head><body>'
             output += '<div class="grid-container">'
-            output += '<div class="continueButton"><form action="http://192.168.1.207:8000/FH/' + self.path.split('/')[1] + '/shotSelection" method="POST">'
+            output += '<div class="continueButton"><form action="http://192.168.1.115:8000/FH/' + self.path.split('/')[1] + '/shotSelection" method="POST">'
             output += '<input type="submit" name="forehand" value="Forehand" class="button"/>'
             output += '</form></div>'
-            output += '<div class="chooseButton"><form action="http://192.168.1.207:8000/BH/' + self.path.split('/')[1] + '/shotSelection" method="POST">'
+            output += '<div class="chooseButton"><form action="http://192.168.1.115:8000/BH/' + self.path.split('/')[1] + '/shotSelection" method="POST">'
             output += '<input type="submit" name="backhand" value="Backhand" class="button" />'
             output += '</form></div>'
-            output += '<div class="repeatButton"><form action="http://192.168.1.207:8000/repeat" method="POST">'
+            output += '<div class="repeatButton"><form action="http://192.168.1.115:8000/repeat" method="POST">'
             output += '<input type="submit" name="repeat" value="Repeat" class="button"/>'
             output += '</form></div>'
             output += '</div>'
@@ -581,6 +605,11 @@ class requestHandler(BaseHTTPRequestHandler):
         global overrideQuestionOrPre
         global overrideShotOrStat
         global shot
+        global end
+        global previous_page
+        global baselineSet
+
+        print("Post")
         if self.path.endswith('/newUtterance'):
             print(self.path)
             displayString = self.path.split('/')[1]
@@ -591,6 +620,8 @@ class requestHandler(BaseHTTPRequestHandler):
             displayStringSpaces = displayStringSpaces.replace('%2520', ' ')
             displayStringSpaces = displayStringSpaces.replace('%25', '%')
             phase = phaseString == "exercise"
+            if self.path.split('/')[3] == "end":
+                end = True
             # else:
             #     print("Didn't work")
 
@@ -712,6 +743,9 @@ class requestHandler(BaseHTTPRequestHandler):
         self.send_response(301)
         self.send_header('content-type', 'text/html')
         if self.path.endswith("/stop"):
+            # if repCount == 0 and baselineSet:
+                # Send message to robot: "You must play at least 1 shot before you can end this baseline set."
+            # else:
             print("post going to stop screen")
             self.send_header('Location', '/stop')
         elif self.path.endswith("/overrideOption"):
@@ -719,7 +753,13 @@ class requestHandler(BaseHTTPRequestHandler):
         elif self.path.endswith("/handChoice"):
             self.send_header('Location', '/handChoice')
         else:
-            self.send_header('Location', '/display')
+            if self.path.endswith("/ok"):
+                if previous_page is None:
+                    self.send_header('Location', '/display')
+                else:
+                    self.send_header('Location', previous_page)
+            else:
+                self.send_header('Location', '/display')
         self.end_headers()
 
 
