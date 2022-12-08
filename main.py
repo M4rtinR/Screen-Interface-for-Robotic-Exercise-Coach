@@ -54,12 +54,12 @@ shot = None
 stopCount = 0
 
 # ITT Pepper router:
-#post_address = "http://192.168.1.207:4999/output"
-#controller_post_address = "http://192.168.1.207:5000/cue"
+post_address = "http://192.168.1.207:4999/output"
+controller_post_address = "http://192.168.1.207:5000/cue"
 
 #Dusty:
-post_address = "http://192.168.1.115:4999/output"
-controller_post_address = "http://192.168.1.115:5000/cue"
+#post_address = "http://192.168.1.115:4999/output"
+#controller_post_address = "http://192.168.1.115:5000/cue"
 
 # Home wifi:
 # post_address = "http://192.168.1.174:4999/output"
@@ -70,9 +70,9 @@ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 # 4G hotspot:
 # ssh.connect("192.168.43.57", username="nao", password="nao")
 # ITT_Pepper router:
-# ssh.connect("192.168.1.5", username="nao", password="nao")
+ssh.connect("192.168.1.5", username="nao", password="nao")
 # Dusty in HRI lab
-ssh.connect("192.168.1.105", username="nao", password="mummer")
+#ssh.connect("192.168.1.105", username="nao", password="mummer")
 
 class requestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
