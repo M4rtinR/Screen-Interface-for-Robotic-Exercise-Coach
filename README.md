@@ -13,6 +13,15 @@ NOTE: For this component you will need to run Pycharm as an administrator. In a 
   
   2. Install the required packages as you did for the main coaching policies program. There is only one for this repo: "paramiko".
   
+  3. You will also need to create a directory for the program to store the html pages it creates, before transferring them to Pepper. This directory should be located at /var/www/html/RehabInterface/webpages. To create directories in var, you need administrator privelages, so in a terminal window, execute the following commands:
+  
+         cd /var
+         sudo mkdir www
+         sudo mkdir html
+         sudo mkdir RehabInterface
+         sudo mkdir webpages
+         sudo touch index.html
+  
   3. Navigate to the correct branch (master for stroke rehabilitation demo or SquashScreen for squash demo).
   
   4. Click run.
