@@ -67,8 +67,8 @@ controller_post_address = "http://192.168.1.207:5000/cue"
 # post_address = "http://192.168.1.174:4999/output"
 # controller_post_address = "http://192.168.1.174:5000/cue"
 ssh = paramiko.SSHClient()
-# ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+# ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
 # 4G hotspot:
 # ssh.connect("192.168.43.57", username="nao", password="nao")
 # ITT_Pepper router:
