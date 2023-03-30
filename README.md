@@ -1,5 +1,5 @@
 # RehabInterface
-This repo contains code for running both the squash coaching and stroke rehabilitation systems on Pepper. This is where the display on Pepper's tablet computer screen and interaction with the screen from the user is handled. Written in Python 3. The main code for the robotic coach can be found here: https://github.com/M4rtinR/Robotic-Exercise-Coach-Pepper/blob/master/README.md.
+This repo contains code for running both the squash coaching and stroke rehabilitation systems on Pepper. This is where the display on Pepper's tablet computer screen and interaction with the screen from the user is handled. Written in Python 3. The main code for the robotic coach can be found here: https://github.com/M4rtinR/Robotic-Exercise-Coach-Pepper.
 
 ## Downloading the Code
 NOTE: For this component you will need to run Pycharm as an administrator. In a terminal, open the folder in which Pycharm is installed (for me this is ~/Programs/pycharm-community-2020.3.5/bin, but you may also find it in /snap/pycharm-community/current/bin) and use the following command:
